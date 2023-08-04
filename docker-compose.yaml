@@ -1,0 +1,21 @@
+version: '3'
+
+networks:
+    test-network:
+        external: true
+
+volumes:
+  test-vol:
+
+services:
+  app:
+    container_name: docker_group1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - test-network
+    volumes:
+      - test-vol:/app
