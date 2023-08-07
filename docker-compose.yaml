@@ -13,6 +13,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: tonzi/week-seven_app
     ports:
       - 3000:3000
     networks:
