@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+    
+    tools {nodejs "nodejs13"}
+    
+    environment {
+        DOCKERHUB_CREDENTIALS=credentials("dockerhub")
+    }
+    
+    stages {
+        stage('Start') {
+            steps {
+                echo 'Build is starting'
+            }
+        }
+        stage('Clone Github Repository') {
+            steps {
+                git url: 'https://github.com/Tonzi254/yolo.git', branch: 'master'
+            }
+        }
+        stage('List Directory Contents') {
+            steps {
+                sh '''
+                    ls -al
+                   '''
+            }
+        }
+        stage('Confirm Docker Availability') {
+            steps {
+                sh '''
+                    docker --version
+                   '''
+            }
+        }
+        stage('Build Backend') {
+            steps {
+                sh '''
+                    cd backend
+                    docker build -t tonzi/jenkins-yolo-backend:1.0.0 .
+                  '''
+            }
+        }
+            
+        stage('Build Frontend') {
+            steps {
+                sh '''
+                    cd client
+                    docker build -t tonzi/jenkins-yolo-frontend:1.0.0 .
+                  '''
+            }
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                sh '''
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                  '''
+            }
+        }
+        stage('Push images to Docker Hub') {
+            steps {
+                sh '''
+                    echo 'Pushing backend image'
+                    docker push tonzi/jenkins-yolo-backend:1.0.0
+                    
+                    echo 'Pushing frontend image'
+                    docker push tonzi/jenkins-yolo-frontend:1.0.0
+                  '''
+            }
+        }
+        stage('End') {
+            steps {
+                echo 'Build is finished'
+            }
+        }
+             
+    }
+    post {
+        always {
+            sh '''
+               echo 'Logging out of Docker Hub'
+               docker logout
+               '''
+        }
+    }
+}
